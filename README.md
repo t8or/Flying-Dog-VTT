@@ -100,14 +100,14 @@ The application will be available at `http://localhost:3000`. You'll be redirect
 
 ### Project Structure
 ```
-flying-dog-inn-vtt/              # Backend server
-├── data/                        # SQLite database storage
-├── maps/                        # Uploaded map images
-├── server.js                    # Express server + API endpoints
+flying-dog-inn-vtt-backend/     # Backend server
+├── data/                       # SQLite database storage
+├── maps/                       # Uploaded map images
+├── server.js                   # Express server + API endpoints
 └── package.json                # Backend dependencies
 
-flying-dog-inn-vtt-frontend/     # React frontend
-├── public/                      # Static assets
+flying-dog-inn-vtt-frontend/    # React frontend
+├── public/                     # Static assets
 └── src/                        # Source code
     ├── components/             # React components
     └── pages/                  # Page components
