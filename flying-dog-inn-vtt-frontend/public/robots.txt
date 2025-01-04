@@ -1,0 +1,10 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /$
+Allow: /about
+Allow: /login
+Disallow: /game/
+Disallow: /maps/
+Disallow: /campaign/
+Disallow: /characters/
+Disallow: /api/

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flying Dog Inn VTT</title>
+    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <i class="ph ph-beer-stein logo-icon"></i>
+            <h1>Flying Dog Inn VTT</h1>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" id="submitButton">Enter</button>
+            <div id="error" class="error"></div>
+            <div id="timer" class="timer"></div>
+        </form>
+    </div>
+
+    <script>
+        let lastAttempt = 0;
+        const form = document.getElementById('loginForm');
+        const submitButton = document.getElementById('submitButton');
+        const errorDiv = document.getElementById('error');
+        const timerDiv = document.getElementById('timer');
+
+        function updateTimer() {
+            const now = Date.now();
+            const timeLeft = Math.max(0, 5000 - (now - lastAttempt));
+            
+            if (timeLeft > 0) {
+                submitButton.disabled = true;
+                timerDiv.textContent = `Please wait ${Math.ceil(timeLeft / 1000)} seconds...`;
+                setTimeout(updateTimer, 100);
+            } else {
+                submitButton.disabled = false;
+                timerDiv.textContent = '';
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const now = Date.now();
+            if (now - lastAttempt < 5000) {
+                return;
+            }
+            
+            lastAttempt = now;
+            updateTimer();
+            
+            const formData = new FormData(form);
+            const data = {
+                username: formData.get('username'),
+                password: formData.get('password')
+            };
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    window.location.href = result.frontendUrl;
+                } else {
+                    errorDiv.textContent = result.error || 'Invalid credentials';
+                    if (response.status === 403 && result.blockedUntil) {
+                        const blockedUntil = new Date(result.blockedUntil);
+                        errorDiv.textContent = `Account locked until ${blockedUntil.toLocaleString()}`;
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = 'An error occurred. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html> 

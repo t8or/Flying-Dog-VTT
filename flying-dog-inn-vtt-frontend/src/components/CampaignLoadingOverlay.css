@@ -1,0 +1,107 @@
+.campaign-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--paper-color);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.campaign-loading-overlay.exiting {
+  animation: fadeOut 1s ease-in forwards;
+}
+
+.campaign-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.campaign-loading-icon {
+  color: #111827;
+  animation: bounce 2s infinite;
+}
+
+.campaign-loading-phrases {
+  position: relative;
+  height: 24px;
+  width: 300px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.campaign-loading-phrase {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  font-size: 18px;
+  color: #4B5563;
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.campaign-loading-phrase.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.campaign-loading-phrase.active ~ .campaign-loading-phrase {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.campaign-loading-progress-container {
+  width: 200px;
+  height: 6px;
+  background-color: white;
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.campaign-loading-progress-bar {
+  height: 100%;
+  background-color: #111827;
+  border-radius: 999px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: left;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+} 

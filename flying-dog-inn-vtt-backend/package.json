@@ -1,0 +1,21 @@
+{
+  "name": "flying-dog-inn-vtt-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/auth.test.js && node tests/frontend-auth.test.js",
+    "test:auth": "node tests/auth.test.js",
+    "test:frontend": "node tests/frontend-auth.test.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.6.7",
+    "socket.io": "^4.8.1",
+    "sqlite3": "^5.1.7"
+  }
+}

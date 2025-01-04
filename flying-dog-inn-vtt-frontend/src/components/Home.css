@@ -1,0 +1,132 @@
+.home-container {
+  padding: 32px;
+}
+
+.home-content {
+  max-width: 1072px;
+  margin: 0 auto;
+}
+
+.home-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.home-title {
+  margin: 0px;
+  font-size: 30px;
+  color: #111827;
+}
+
+.home-subtitle {
+  margin: 0;
+  font-size: 16px;
+  color: #6B7280;
+}
+
+.stats-section {
+  margin-bottom: 48px;
+}
+
+.stats-title {
+  font-size: 18px;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #F5E6D3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8B4513;
+  border: 1px solid #A0522D;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6B7280;
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 24px;
+  color: #111827;
+  font-weight: 600;
+}
+
+.stat-date {
+  color: #6B7280;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.latest-event {
+  margin-bottom: 48px;
+}
+
+.latest-event-title {
+  font-size: 18px;
+  color: #111827;
+  margin-bottom: 16px;
+}
+
+.event-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.event-name {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  color: #111827;
+}
+
+.event-details {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.event-date {
+  color: #6B7280;
+  font-size: 14px;
+}
+
+.no-campaign {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  color: #6B7280;
+} 
