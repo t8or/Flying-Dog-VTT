@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "concurrently \"npm run auth\" \"npm run backend\" \"npm run frontend\"",
-    "auth": "cd flying-dog-inn-vtt-auth && npm install && node server.js",
-    "backend": "cd flying-dog-inn-vtt-backend && npm install && node server.js",
-    "frontend": "cd flying-dog-inn-vtt-frontend && npm install && npm start"
+    "auth": "cd flying-dog-inn-vtt-auth && npm install --legacy-peer-deps --force && node server.js",
+    "backend": "cd flying-dog-inn-vtt-backend && npm install --legacy-peer-deps --force && node server.js",
+    "frontend": "cd flying-dog-inn-vtt-frontend && npm install --legacy-peer-deps --force && npm start"
   },
   "author": "",
   "license": "ISC",
