@@ -106,6 +106,14 @@ flying-dog-inn-vtt/              # Backend server
 ├── server.js                    # Express server + API endpoints
 └── package.json                # Backend dependencies
 
+flying-dog-inn-vtt-auth/         # Auth service
+├── public/                      # Static assets
+│   ├── index.html              # Login page
+│   └── login.css               # Login styles
+├── server.js                    # Auth server + API endpoints
+├── auth.sqlite                  # Auth database
+└── package.json                # Auth dependencies
+
 flying-dog-inn-vtt-frontend/     # React frontend
 ├── public/                      # Static assets
 └── src/                        # Source code
