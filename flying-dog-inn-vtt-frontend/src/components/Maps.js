@@ -48,7 +48,7 @@ const Maps = ({ onMapChange }) => {
     if (!newName || !newName.trim() || newName === mapData?.name) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/maps/${mapId}/rename`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/rename`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ const Maps = ({ onMapChange }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/maps/${mapId}?campaign_id=${selectedCampaign.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}?campaign_id=${selectedCampaign.id}`, {
         method: 'DELETE'
       });
 
@@ -129,7 +129,7 @@ const Maps = ({ onMapChange }) => {
     if (!selectedCampaign) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/maps/${mapId}?campaign_id=${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}?campaign_id=${selectedCampaign.id}`);
       if (!response.ok) throw new Error('Failed to fetch map');
       const data = await response.json();
       setMapData(data);
@@ -145,7 +145,7 @@ const Maps = ({ onMapChange }) => {
         console.error('Failed to load map image:', error);
         setIsLoading(false);
       };
-      img.src = `http://localhost:3001/maps/${data.path}`;
+      img.src = `${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3334'}/maps/${data.path}`;
       
       if (onMapChange) onMapChange(data);
     } catch (error) {
@@ -160,7 +160,7 @@ const Maps = ({ onMapChange }) => {
     
     try {
       console.log('Fetching markers for campaign:', selectedCampaign.id, 'map:', mapId);
-      const response = await fetch(`http://localhost:3001/api/maps/${mapId}/markers?campaign_id=${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/markers?campaign_id=${selectedCampaign.id}`);
       
       const responseText = await response.text();
       console.log('Fetch markers response:', responseText);
@@ -314,7 +314,7 @@ const Maps = ({ onMapChange }) => {
 
             deleteBtn.disabled = true;
             console.log('Deleting marker with ID:', marker.markerData.id);  // Debug log
-            const response = await fetch(`http://localhost:3001/api/maps/${mapId}/markers/${marker.markerData.id}?campaign_id=${selectedCampaign.id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/markers/${marker.markerData.id}?campaign_id=${selectedCampaign.id}`, {
               method: 'DELETE',
               headers: { 'Content-Type': 'application/json' }
             });
@@ -371,7 +371,7 @@ const Maps = ({ onMapChange }) => {
 
                 console.log('Updating marker with ID:', marker.markerData.id, updatedMarker);  // Debug log
 
-                const response = await fetch(`http://localhost:3001/api/maps/${mapId}/markers/${marker.markerData.id}`, {
+                const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/markers/${marker.markerData.id}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(updatedMarker)
@@ -467,7 +467,7 @@ const Maps = ({ onMapChange }) => {
         marker.on('dragend', async () => {
           const newPos = marker.getLatLng();
           try {
-            const response = await fetch(`http://localhost:3001/api/maps/${mapId}/markers/${marker.markerData.id}`, {
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/markers/${marker.markerData.id}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -546,7 +546,7 @@ const Maps = ({ onMapChange }) => {
       leafletMapRef.current = map;
 
       // Add the image overlay immediately
-      const imageOverlay = L.imageOverlay(`http://localhost:3001/maps/${mapData.path}`, bounds).addTo(map);
+      const imageOverlay = L.imageOverlay(`${process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:3334'}/maps/${mapData.path}`, bounds).addTo(map);
       map.fitBounds(bounds);
 
       // Add click handler for new markers
@@ -648,7 +648,7 @@ const Maps = ({ onMapChange }) => {
                     color: formData.get('color') || '#FF0000'
                   };
 
-                  const response = await fetch(`http://localhost:3001/api/maps/${mapId}/markers`, {
+                  const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/${mapId}/markers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(newMarker)

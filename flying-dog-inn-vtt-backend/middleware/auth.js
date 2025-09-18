@@ -9,7 +9,7 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     // Validate token with auth service
-    const response = await fetch('http://localhost:3002/api/auth/validate', {
+    const response = await fetch(`${process.env.AUTH_SERVICE_URL || 'http://localhost:3333'}/api/auth/validate`, {
       headers: {
         'Cookie': `auth_token=${token}`
       }

@@ -1,0 +1,23 @@
+# Use native platform (much faster)
+FROM node:16-alpine
+
+WORKDIR /app
+
+# Install build dependencies for SQLite3
+RUN apk add --no-cache sqlite python3 make g++
+
+# Copy package files first for better caching
+COPY flying-dog-inn-vtt-auth/package*.json ./
+
+# Install dependencies and rebuild SQLite3 for correct architecture
+RUN npm ci --only=production && \
+    npm rebuild sqlite3
+
+# Copy application code (exclude node_modules to avoid architecture conflicts)
+COPY flying-dog-inn-vtt-auth/server.js ./
+COPY flying-dog-inn-vtt-auth/public/ ./public/
+
+ENV PORT=3333
+EXPOSE 3333
+
+CMD ["npm", "start"] 

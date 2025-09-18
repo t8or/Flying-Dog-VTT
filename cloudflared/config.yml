@@ -1,0 +1,7 @@
+tunnel: ab73cb60-f2c4-4b7d-b45a-86dec1391536
+credentials-file: /etc/cloudflared/ab73cb60-f2c4-4b7d-b45a-86dec1391536.json
+
+ingress:
+  - hostname: vtt.thorn.ski
+    service: http://nginx:80
+  - service: http_status:404

@@ -35,15 +35,27 @@ const Home = () => {
     try {
       console.log('Fetching campaign stats...');
       
-      const mapsResponse = await fetch(`http://localhost:3001/api/maps?campaign_id=${selectedCampaign.id}`);
+              const mapsResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps?campaign_id=${selectedCampaign.id}`);
       if (!mapsResponse.ok) throw new Error('Failed to fetch maps');
       const maps = await mapsResponse.json();
       console.log('Found maps:', maps);
       
-      const timelineResponse = await fetch(`http://localhost:3001/api/timeline?campaign_id=${selectedCampaign.id}`);
+      // Ensure maps is an array
+      if (!Array.isArray(maps)) {
+        console.error('Expected maps to be an array, got:', typeof maps, maps);
+        throw new Error('Invalid maps data received');
+      }
+      
+              const timelineResponse = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/timeline?campaign_id=${selectedCampaign.id}`);
       if (!timelineResponse.ok) throw new Error('Failed to fetch timeline events');
       const timelineEvents = await timelineResponse.json();
       console.log('Found timeline events:', timelineEvents);
+      
+      // Ensure timelineEvents is an array
+      if (!Array.isArray(timelineEvents)) {
+        console.error('Expected timeline events to be an array, got:', typeof timelineEvents, timelineEvents);
+        throw new Error('Invalid timeline events data received');
+      }
       
       const lastEvent = timelineEvents.length > 0 
         ? timelineEvents.reduce((latest, event) => 

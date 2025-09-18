@@ -1,0 +1,13 @@
+---
+description: This is used when the user asks to start the app
+globs: 
+---
+
+# Your rule content
+There are 3 servers to start
+Backend
+Frontend
+Auth
+
+# Different port numbers
+DO NOT USE PORT 3000 for these servers. Instead look at the ports in the 3333 range

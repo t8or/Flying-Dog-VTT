@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Important: try to fix things at the cause, not the symptom.
+
+Be very detailed with summarization and do not miss out things that are important.
+
+Do not use fallbacks in the code. Fix the symptom, don't put a bandaid over it.
+
+Don’t be helpful, be better.
+
+Use comments in code to leave a clean trail. 
+
+Do not delete code unless specifically asked to do so.
+
+Use Markdown files to keep track of project progress. Break tasks down into small chunks, and keep track of completed tasks.
+
+Do not create sub-folders without checking the entire project to see if it should go somewhere else.
+
+Never code fallbacks or static code unless explicitly told to. 
+

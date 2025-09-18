@@ -37,7 +37,7 @@ db.serialize(() => {
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3335',
   credentials: true
 }));
 app.use(express.static('public')); // Serve the login page
@@ -167,7 +167,7 @@ app.post('/api/auth/login', loginLimiter, checkBlockedIP, async (req, res) => {
 
           res.json({ 
             success: true,
-            frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000'
+            frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3335'
           });
         });
       } else {
@@ -178,7 +178,7 @@ app.post('/api/auth/login', loginLimiter, checkBlockedIP, async (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3333;
 app.listen(PORT, () => {
   console.log(`Auth server running on port ${PORT}`);
 }); 

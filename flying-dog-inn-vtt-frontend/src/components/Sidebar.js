@@ -28,7 +28,7 @@ const ConnectionStatus = () => {
   const checkConnection = async () => {
     try {
       setIsChecking(true);
-      const response = await fetch('http://localhost:3001/api/health');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/health`);
       const data = await response.json();
       const isOk = response.ok && data.status === 'ok';
       setIsConnected(isOk);
@@ -196,7 +196,7 @@ const CampaignSettings = () => {
     if (!newName || newName === selectedCampaign.name) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${selectedCampaign.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns/${selectedCampaign.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +222,7 @@ const CampaignSettings = () => {
     if (!newName) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -253,7 +253,7 @@ const CampaignSettings = () => {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${selectedCampaign.id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns/${selectedCampaign.id}`, {
         method: 'DELETE',
       });
 
@@ -340,9 +340,23 @@ const CampaignSelector = () => {
   const fetchCampaigns = async () => {
     try {
       console.log('Fetching campaigns, current selected:', selectedCampaign);
-      const response = await fetch('http://localhost:3001/api/campaigns');
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch campaigns: ${response.status} ${response.statusText}`);
+      }
+      
       const data = await response.json();
       console.log('Fetched campaigns:', data);
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected campaigns to be an array, got:', typeof data, data);
+        setCampaigns([]);
+        setIsLoading(false);
+        return;
+      }
+      
       setCampaigns(data);
       
       // Only auto-select if we have no selection and no stored ID
@@ -353,6 +367,7 @@ const CampaignSelector = () => {
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching campaigns:', error);
+      setCampaigns([]); // Ensure campaigns is always an array
       setIsLoading(false);
     }
   };
@@ -362,7 +377,7 @@ const CampaignSelector = () => {
     if (!name) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -430,7 +445,7 @@ const CampaignSelector = () => {
       
       {isOpen && (
         <div className="campaign-dropdown">
-          {campaigns.map(campaign => (
+          {Array.isArray(campaigns) && campaigns.map(campaign => (
             <div
               key={campaign.id}
               className={`campaign-option ${campaign.id === selectedCampaign?.id ? 'active' : ''}`}
@@ -480,7 +495,7 @@ const Sidebar = ({ onMapChange }) => {
 
     try {
       console.log('Fetching maps from API for campaign:', selectedCampaign.id);
-      const response = await fetch(`http://localhost:3001/api/maps?campaign_id=${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps?campaign_id=${selectedCampaign.id}`);
       
       if (!response.ok) {
         throw new Error(`Failed to fetch maps: ${response.status} ${response.statusText}`);
@@ -488,6 +503,14 @@ const Sidebar = ({ onMapChange }) => {
       
       const data = await response.json();
       console.log('Fetched maps for campaign', selectedCampaign.id + ':', data);
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected maps to be an array, got:', typeof data, data);
+        setMaps([]);
+        return;
+      }
+      
       setMaps(data);
     } catch (error) {
       console.error('Error fetching maps:', error);
@@ -515,6 +538,9 @@ const Sidebar = ({ onMapChange }) => {
   };
 
   const moveMap = (dragIndex, hoverIndex) => {
+    if (!Array.isArray(maps) || dragIndex >= maps.length || hoverIndex < 0) {
+      return;
+    }
     const dragMap = maps[dragIndex];
     const newMaps = [...maps];
     newMaps.splice(dragIndex, 1);
@@ -523,12 +549,12 @@ const Sidebar = ({ onMapChange }) => {
   };
 
   const handleDragEnd = async () => {
-    if (!selectedCampaign) return;
+    if (!selectedCampaign || !Array.isArray(maps)) return;
 
     // Save the new order to the backend
     const orderedIds = maps.map(map => map.id);
     try {
-      const response = await fetch('http://localhost:3001/api/maps/reorder', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps/reorder`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -546,9 +572,9 @@ const Sidebar = ({ onMapChange }) => {
     }
   };
 
-  const filteredMaps = maps.filter(map => 
+  const filteredMaps = Array.isArray(maps) ? maps.filter(map => 
     map.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   const handleMapChange = async (change) => {
     console.log('Map change:', change);
@@ -603,7 +629,7 @@ const Sidebar = ({ onMapChange }) => {
               <span className="nav-header-text">Maps</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span className="nav-header-badge">{maps.length}</span>
+              <span className="nav-header-badge">{Array.isArray(maps) ? maps.length : 0}</span>
               <CaretDown 
                 size={20} 
                 weight="regular"

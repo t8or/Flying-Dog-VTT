@@ -1,74 +1,39 @@
-# Dependencies
-node_modules/
-**/node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
-
-# Production
-**/build/
-**/dist/
-
-# Environment files
+# Environment variables
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-**/.env
+
+# Cloudflare tunnel credentials (sensitive)
+cloudflared/*.json
+cloudflared/cert.pem
+
+# But keep the directory and example config
+!cloudflared/
+!cloudflared/.gitkeep
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# Build outputs
+build/
+dist/
 
 # Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs
 *.log
+logs/
 
-# Runtime data
-pids
-*.pid
-*.seed
-*.pid.lock
-
-# SQLite databases
+# Database files (if you don't want to commit them)
 *.sqlite
-*.sqlite3
 *.db
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# IDE - IntelliJ
-.idea/
-*.iml
-*.iws
-*.ipr
-
-# macOS
+# OS files
 .DS_Store
-.AppleDouble
-.LSOverride
-._*
-
-# Windows
 Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
 
-# Uploaded files
-**/maps/
-**/uploads/
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Misc
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local 
+# Docker volumes data
+data/

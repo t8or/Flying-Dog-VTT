@@ -36,13 +36,21 @@ const CombatLoot = () => {
 
   const fetchLootEntries = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/combat/loot/${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot/${selectedCampaign.id}`);
       if (!response.ok) throw new Error('Failed to fetch loot entries');
       const data = await response.json();
-      setEntries(data);
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected loot entries to be an array, got:', typeof data, data);
+        setEntries([]);
+      } else {
+        setEntries(data);
+      }
       setIsLoading(false);
     } catch (error) {
       console.error('Error fetching loot entries:', error);
+      setEntries([]); // Ensure entries is always an array
       setIsLoading(false);
     }
   };
@@ -73,7 +81,7 @@ const CombatLoot = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/combat/loot/${entryId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot/${entryId}`, {
         method: 'DELETE'
       });
 
@@ -94,8 +102,8 @@ const CombatLoot = () => {
 
     try {
       const url = editingEntry 
-        ? `http://localhost:3001/api/combat/loot/${editingEntry.id}`
-        : 'http://localhost:3001/api/combat/loot';
+        ? `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot/${editingEntry.id}`
+        : `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot`;
 
       const method = editingEntry ? 'PUT' : 'POST';
 
@@ -141,7 +149,7 @@ const CombatLoot = () => {
       <div className="loot-entries-section">
         <h2>Loot History</h2>
         <div className="loot-entries">
-          {entries.length === 0 ? (
+          {!Array.isArray(entries) || entries.length === 0 ? (
             <p className="no-entries">No loot entries yet</p>
           ) : (
             entries.map(entry => (

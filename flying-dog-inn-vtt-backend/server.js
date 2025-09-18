@@ -11,13 +11,16 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.FRONTEND_URL || "http://localhost:3335",
     methods: ["GET", "POST"]
   }
 });
 
 // Enable CORS for all routes
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || true,
+  credentials: true
+}));
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -1053,7 +1056,7 @@ app.get('/api/campaign/export/:campaign_id', async (req, res) => {
 });
 
 // Start the server
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3334;
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

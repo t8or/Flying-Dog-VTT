@@ -1,0 +1,43 @@
+# Multi-stage build for better caching
+FROM node:16.20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY flying-dog-inn-vtt-frontend/package*.json ./
+
+# Install all dependencies (React needs dev dependencies to build)
+RUN npm install --silent
+
+# Copy source code
+COPY flying-dog-inn-vtt-frontend/ .
+
+# Build arguments for React environment variables
+ARG REACT_APP_API_URL=http://localhost:3334/api
+ARG REACT_APP_WS_URL=ws://localhost:3334
+ARG REACT_APP_AUTH_URL=http://localhost:3333
+
+# Set environment variables for build time
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
+ENV REACT_APP_AUTH_URL=$REACT_APP_AUTH_URL
+
+# Build the React app
+RUN npm run build
+
+# Production stage
+FROM node:16.20-alpine
+
+WORKDIR /app
+
+# Install serve globally
+RUN npm install -g serve@14
+
+# Copy built app from builder stage
+COPY --from=builder /app/build ./build
+
+ENV PORT=3335
+EXPOSE 3335
+
+# Serve the built app
+CMD ["serve", "-s", "build", "-l", "3335"] 

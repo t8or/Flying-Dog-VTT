@@ -29,7 +29,7 @@ const Log = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:3001/api/logs?campaign_id=${selectedCampaign.id}&limit=${limit}&offset=${offset}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/logs?campaign_id=${selectedCampaign.id}&limit=${limit}&offset=${offset}`
       );
       if (!response.ok) throw new Error('Failed to fetch logs');
       const data = await response.json();
@@ -161,7 +161,7 @@ const Log = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/campaign/export/${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaign/export/${selectedCampaign.id}`);
       if (!response.ok) throw new Error('Failed to export campaign data');
       const data = await response.json();
 

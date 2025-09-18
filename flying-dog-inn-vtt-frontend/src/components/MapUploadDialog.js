@@ -32,7 +32,7 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
     formData.append('campaign_id', selectedCampaign.id);
 
     try {
-      const response = await fetch('http://localhost:3001/api/maps', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/maps`, {
         method: 'POST',
         body: formData,
       });

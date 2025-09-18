@@ -1,0 +1,88 @@
+version: '3.8'
+
+networks:
+  flying-dog-network:
+    driver: bridge
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    container_name: flying-dog-inn-auth
+    environment:
+      - PORT=3333
+      - DATABASE_PATH=/config/auth.sqlite
+      - FRONTEND_URL=https://vtt.thorn.ski
+      - NODE_ENV=production
+    volumes:
+      - ./data/auth:/config
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: flying-dog-inn-backend
+    environment:
+      - PORT=3334
+      - DATABASE_PATH=/config/database.sqlite
+      - MAPS_DIRECTORY=/maps
+      - AUTH_SERVICE_URL=http://flying-dog-inn-auth:3333
+      - FRONTEND_URL=https://vtt.thorn.ski
+      - NODE_ENV=production
+    volumes:
+      - ./data/backend:/config
+      - ./data/maps:/maps
+    depends_on:
+      - auth
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - REACT_APP_API_URL=https://vtt.thorn.ski/api
+        - REACT_APP_WS_URL=wss://vtt.thorn.ski
+        - REACT_APP_AUTH_URL=https://vtt.thorn.ski
+    container_name: flying-dog-inn-frontend
+    environment:
+      - PORT=3335
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  # Nginx reverse proxy to handle routing
+  nginx:
+    image: nginx:alpine
+    container_name: flying-dog-inn-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+      - auth
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  # Cloudflare Tunnel
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: flying-dog-inn-tunnel
+    command: ["tunnel", "--no-autoupdate", "run", "--token", "eyJhIjoiMjcwNTY3NTNlODk3MTY3ZDgzMmJlNjhlOWQzNDc5NzIiLCJ0IjoiODlkMTFlMjMtZjcyNi00YzRmLTkyYzMtMzA1ODM1OTY0MWVkIiwicyI6IllUWTFaV0l6TkRRdE1UYzJNUzAwT1Roa0xXRTFNVGN0TWpaaU9HRTNZall6TUdJeCJ9"]
+    depends_on:
+      - nginx
+    networks:
+      - flying-dog-network
+    restart: unless-stopped 

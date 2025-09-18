@@ -1,0 +1,26 @@
+# Use native platform (much faster)
+FROM node:16-alpine
+
+WORKDIR /app
+
+# Install build dependencies for SQLite3
+RUN apk add --no-cache sqlite python3 make g++ && \
+    mkdir -p data maps
+
+# Copy package files first for better caching
+COPY flying-dog-inn-vtt-backend/package*.json ./
+
+# Install dependencies and rebuild SQLite3 for correct architecture
+RUN npm ci --only=production && \
+    npm rebuild sqlite3
+
+# Copy application code (exclude node_modules to avoid architecture conflicts)
+COPY flying-dog-inn-vtt-backend/server.js ./
+COPY flying-dog-inn-vtt-backend/middleware/ ./middleware/
+COPY flying-dog-inn-vtt-backend/migrations/ ./migrations/
+COPY flying-dog-inn-vtt-backend/migrate.js ./
+
+ENV PORT=3334
+EXPOSE 3334
+
+CMD ["npm", "start"] 

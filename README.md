@@ -89,7 +89,57 @@ npm start
 
 The application will be available at `http://localhost:3000`. You'll be redirected to the auth service at `http://localhost:3002` for login.
 
-## 💻 Development Notes
+### Docker Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/flying-dog-inn-vtt.git
+cd flying-dog-inn-vtt
+```
+
+2. Create environment files as described in the standard installation section above.
+
+3. Build and run using Docker Compose:
+```bash
+docker-compose up --build
+```
+
+The services will be available at:
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:3001`
+- Auth Service: `http://localhost:3002`
+
+### Docker Volumes
+
+The application uses Docker volumes to persist data:
+```yaml
+volumes:
+  - /mnt/user/appdata/flying-dog-inn-vtt/auth:/config     # Auth service data
+  - /mnt/user/appdata/flying-dog-inn-vtt/backend:/config  # Backend data
+  - /mnt/user/appdata/flying-dog-inn-vtt/maps:/maps       # Map storage
+```
+
+### Container Details
+
+1. **Auth Service**
+   - Port: 3002
+   - Base image: Node.js 16
+   - Handles user authentication
+   - Rate limiting enabled
+
+2. **Backend Service**
+   - Port: 3001
+   - Base image: Node.js 16
+   - Manages game data and WebSocket connections
+   - Handles file uploads
+
+3. **Frontend Service**
+   - Port: 3000
+   - Base image: Nginx
+   - Serves static React application files
+   - Connects to backend and auth services
+
+## �� Development Notes
 
 - The backend uses SQLite for simplicity and portability
 - Map images are stored in the filesystem with references in the database

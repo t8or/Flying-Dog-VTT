@@ -80,7 +80,7 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    window.location.href = result.frontendUrl;
+                    window.location.href = result.frontendUrl + '/home';
                 } else {
                     errorDiv.textContent = result.error || 'Invalid credentials';
                     if (response.status === 403 && result.blockedUntil) {

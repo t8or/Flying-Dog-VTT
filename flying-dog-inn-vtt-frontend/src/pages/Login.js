@@ -3,8 +3,8 @@ import './Login.css';
 
 const Login = () => {
   useEffect(() => {
-    // Redirect to auth service
-    window.location.href = 'http://localhost:3002';
+    // Redirect to auth service root path (where the login form is)
+    window.location.href = '/';
   }, []);
 
   return (

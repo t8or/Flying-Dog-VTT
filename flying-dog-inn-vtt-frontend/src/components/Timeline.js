@@ -105,7 +105,7 @@ const EventMenu = ({ event, onEdit, onDelete }) => {
 };
 
 const TimelineNavigation = ({ events, onTimelineClick }) => {
-  const groupedEvents = events.reduce((acc, event) => {
+  const groupedEvents = Array.isArray(events) ? events.reduce((acc, event) => {
     const date = new Date(parseInt(event.timestamp));
     const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
     
@@ -114,7 +114,7 @@ const TimelineNavigation = ({ events, onTimelineClick }) => {
     }
     acc[month].push(event);
     return acc;
-  }, {});
+  }, {}) : {};
 
   // Sort months for calculating fade
   const sortedMonths = Object.keys(groupedEvents).sort((a, b) => {
@@ -212,12 +212,21 @@ const Timeline = () => {
     if (!selectedCampaign) return;
     
     try {
-      const response = await fetch(`http://localhost:3001/api/timeline?campaign_id=${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/timeline?campaign_id=${selectedCampaign.id}`);
       if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected events to be an array, got:', typeof data, data);
+        setEvents([]);
+        return;
+      }
+      
       setEvents(data);
     } catch (error) {
       console.error('Error fetching events:', error);
+      setEvents([]); // Ensure events is always an array
     }
   };
 
@@ -235,7 +244,7 @@ const Timeline = () => {
     try {
       console.log('Deleting event:', eventId);
       const response = await fetch(
-        `http://localhost:3001/api/timeline/${eventId}?campaign_id=${selectedCampaign.id}`, 
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/timeline/${eventId}?campaign_id=${selectedCampaign.id}`, 
         { method: 'DELETE' }
       );
       
@@ -283,8 +292,8 @@ const Timeline = () => {
         };
         
         const url = initialEvent 
-          ? `http://localhost:3001/api/timeline/${initialEvent.id}`
-          : 'http://localhost:3001/api/timeline';
+          ? `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/timeline/${initialEvent.id}`
+          : `${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/timeline`;
         
         const method = initialEvent ? 'PUT' : 'POST';
         
@@ -431,7 +440,7 @@ const Timeline = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3001/api/campaign/export/${selectedCampaign.id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaign/export/${selectedCampaign.id}`);
       if (!response.ok) throw new Error('Failed to export campaign data');
       const data = await response.json();
 
@@ -576,7 +585,7 @@ const Timeline = () => {
             }}>
               <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
                 {Object.entries(
-                  events.reduce((acc, event) => {
+                  Array.isArray(events) ? events.reduce((acc, event) => {
                     const date = new Date(parseInt(event.timestamp));
                     const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
                     if (!acc[month]) {
@@ -584,7 +593,7 @@ const Timeline = () => {
                     }
                     acc[month].push(event);
                     return acc;
-                  }, {})
+                  }, {}) : {}
                 )
                 .sort(([monthA], [monthB]) => {
                   const dateA = new Date(monthA);

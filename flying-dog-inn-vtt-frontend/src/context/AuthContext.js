@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('http://localhost:3002/api/auth/validate', {
+        const response = await fetch(`${process.env.REACT_APP_AUTH_URL || 'http://localhost:3002'}/api/auth/validate`, {
           credentials: 'include'
         });
         const data = await response.json();

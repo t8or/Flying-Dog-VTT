@@ -1,0 +1,2 @@
+# This file ensures the cloudflared directory is tracked in git
+# The actual tunnel configuration files will be created by setup-tunnel.sh

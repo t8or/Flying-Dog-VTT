@@ -1,0 +1,68 @@
+version: '3.8'
+
+networks:
+  flying-dog-network:
+    driver: bridge
+
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: Dockerfile.auth
+    container_name: flying-dog-inn-auth-dev
+    environment:
+      - PORT=3333
+      - DATABASE_PATH=/config/auth.sqlite
+      - FRONTEND_URL=http://localhost:3335
+      - NODE_ENV=development
+    ports:
+      - "3333:3333"
+    volumes:
+      - ./data/auth:/config
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: flying-dog-inn-backend-dev
+    environment:
+      - PORT=3334
+      - DATABASE_PATH=/config/database.sqlite
+      - MAPS_DIRECTORY=/maps
+      - AUTH_SERVICE_URL=http://flying-dog-inn-auth-dev:3333
+      - FRONTEND_URL=http://localhost:3335
+      - NODE_ENV=development
+    ports:
+      - "3334:3334"
+    volumes:
+      - ./data/backend:/config
+      - ./data/maps:/maps
+      - ./flying-dog-inn-vtt-backend/maps:/maps
+    depends_on:
+      - auth
+    networks:
+      - flying-dog-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        - REACT_APP_API_URL=http://localhost:3334/api
+        - REACT_APP_WS_URL=ws://localhost:3334
+        - REACT_APP_AUTH_URL=http://localhost:3333
+    container_name: flying-dog-inn-frontend-dev
+    environment:
+      - PORT=3335
+      - NODE_ENV=development
+    ports:
+      - "3335:3335"
+    depends_on:
+      - backend
+    networks:
+      - flying-dog-network
+    restart: unless-stopped

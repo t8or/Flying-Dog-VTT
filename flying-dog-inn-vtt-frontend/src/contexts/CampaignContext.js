@@ -23,15 +23,25 @@ export const CampaignProvider = ({ children }) => {
 
   const fetchCampaign = async (campaignId) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/campaigns/${campaignId}`);
-      console.log('Campaign fetch response:', response.status);
+      console.log('Fetching campaign:', campaignId);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/campaigns/${campaignId}`);
+      console.log('Campaign fetch response:', response.status, response.statusText);
       
       if (response.ok) {
         const campaign = await response.json();
         console.log('Successfully loaded campaign:', campaign);
+        
+        // Validate campaign data structure
+        if (!campaign || typeof campaign.id === 'undefined') {
+          console.error('Invalid campaign data received:', campaign);
+          setSelectedCampaign(null);
+          localStorage.removeItem('selectedCampaignId');
+          return;
+        }
+        
         setSelectedCampaign(campaign);
       } else {
-        console.error('Failed to fetch campaign:', campaignId);
+        console.error('Failed to fetch campaign:', campaignId, 'Status:', response.status);
         setSelectedCampaign(null);
         localStorage.removeItem('selectedCampaignId');
       }
@@ -46,6 +56,12 @@ export const CampaignProvider = ({ children }) => {
     console.log('Selected campaign changed:', campaign);
     
     if (campaign) {
+      // Validate campaign object
+      if (!campaign.id) {
+        console.error('Invalid campaign object - missing id:', campaign);
+        return;
+      }
+      
       setIsLoading(true);
       localStorage.setItem('selectedCampaignId', campaign.id);
       setPendingCampaignId(campaign.id);
@@ -53,12 +69,15 @@ export const CampaignProvider = ({ children }) => {
       // Actual campaign switch will happen after 1 second
       setTimeout(async () => {
         await fetchCampaign(campaign.id);
+        setIsLoading(false);
+        setPendingCampaignId(null);
         navigate('/');
       }, 1000);
     } else {
       localStorage.removeItem('selectedCampaignId');
       setSelectedCampaign(null);
       setPendingCampaignId(null);
+      setIsLoading(false);
       navigate('/');
     }
   }, [navigate]);
