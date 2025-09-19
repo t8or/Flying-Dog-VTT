@@ -14,11 +14,14 @@ import {
   CheckCircle,
   Warning,
   HouseLine,
-  BookOpen
+  BookOpen,
+  CaretLeft,
+  List
 } from "@phosphor-icons/react";
 import MapUploadDialog from './MapUploadDialog';
 import './Sidebar.css';
 import { useCampaign } from '../contexts/CampaignContext';
+import { useSocket } from '../contexts/SocketContext';
 
 const ConnectionStatus = () => {
   const [lastSynced, setLastSynced] = useState(null);
@@ -473,8 +476,10 @@ const Sidebar = ({ onMapChange }) => {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [mapsExpanded, setMapsExpanded] = useState(true);
   const [combatExpanded, setCombatExpanded] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
   const { selectedCampaign } = useCampaign();
+  const { socket, isConnected } = useSocket();
 
   useEffect(() => {
     if (selectedCampaign) {
@@ -517,6 +522,51 @@ const Sidebar = ({ onMapChange }) => {
       setMaps([]);
     }
   };
+
+  // WebSocket event listener for real-time map updates
+  useEffect(() => {
+    if (!socket || !isConnected || !selectedCampaign) return;
+
+    const handleMapUpdate = (update) => {
+      console.log('Sidebar received map update:', update);
+      
+      switch (update.type) {
+        case 'map-created':
+          console.log('Adding new map to sidebar:', update.data.map);
+          setMaps(prev => {
+            // Check if map already exists to prevent duplicates
+            const exists = prev.find(m => m.id === update.data.map.id);
+            if (exists) return prev;
+            
+            return [...prev, update.data.map];
+          });
+          break;
+
+        case 'map-updated':
+          console.log('Updating map in sidebar:', update.data.map);
+          setMaps(prev => prev.map(m => 
+            m.id === update.data.map.id 
+              ? { ...m, ...update.data.map }
+              : m
+          ));
+          break;
+
+        case 'map-deleted':
+          console.log('Removing map from sidebar:', update.data.mapId);
+          setMaps(prev => prev.filter(m => m.id !== update.data.mapId));
+          break;
+
+        default:
+          console.log('Unknown update type in sidebar:', update.type);
+      }
+    };
+
+    socket.on('map-update', handleMapUpdate);
+
+    return () => {
+      socket.off('map-update', handleMapUpdate);
+    };
+  }, [socket, isConnected, selectedCampaign]);
 
   const handleUploadSuccess = async () => {
     console.log('Map upload successful, refreshing maps list');
@@ -592,11 +642,21 @@ const Sidebar = ({ onMapChange }) => {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="sidebar">
-        <Link to="/" className="sidebar-header">
-          <BeerStein weight="regular" size={24} style={{ color: '#111827' }} />
-          <span className="sidebar-logo-text">Flying Dog Inn VTT</span>
-        </Link>
+      <>
+        <div className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
+          <div className="sidebar-header">
+            <Link to="/" className="sidebar-header-link">
+              <BeerStein weight="regular" size={24} style={{ color: '#111827' }} />
+              <span className="sidebar-logo-text">Flying Dog Inn VTT</span>
+            </Link>
+            <button 
+              className="sidebar-collapse-button"
+              onClick={() => setIsCollapsed(true)}
+              aria-label="Collapse sidebar"
+            >
+              <CaretLeft size={20} weight="regular" />
+            </button>
+          </div>
 
         <div className="search-input-container">
           <MagnifyingGlass size={20} weight="regular" className="search-icon" />
@@ -723,7 +783,18 @@ const Sidebar = ({ onMapChange }) => {
           onUpload={handleMapChange}
           campaignId={selectedCampaign?.id}
         />
-      </div>
+        </div>
+
+        {isCollapsed && (
+          <button 
+            className="sidebar-expand-button"
+            onClick={() => setIsCollapsed(false)}
+            aria-label="Expand sidebar"
+          >
+            <List size={24} weight="regular" />
+          </button>
+        )}
+      </>
     </DndProvider>
   );
 };

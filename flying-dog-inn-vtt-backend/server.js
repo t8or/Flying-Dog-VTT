@@ -35,11 +35,13 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Connect to SQLite database
-const db = new sqlite3.Database('database.sqlite', (err) => {
+const databasePath = process.env.DATABASE_PATH || 'database.sqlite';
+console.log('Connecting to database at:', databasePath);
+const db = new sqlite3.Database(databasePath, (err) => {
   if (err) {
     console.error('Error connecting to database:', err);
   } else {
-    console.log('Connected to SQLite database');
+    console.log('Connected to SQLite database at:', databasePath);
   }
 });
 
@@ -200,6 +202,12 @@ app.post('/api/maps', upload.single('image'), (req, res) => {
               }
 
               console.log('Map saved successfully:', map);
+              
+              // Emit real-time update for map creation
+              emitMapUpdate(campaignId, 'map-created', {
+                map: map
+              });
+              
               res.json(map);
 
               // Log the action
@@ -409,10 +417,26 @@ app.put('/api/maps/:id/rename', async (req, res) => {
   }
 
   try {
-    await db.run('UPDATE maps SET name = ? WHERE id = ? AND campaign_id = ?', [name.trim(), id, campaign_id]);
-    // Log the action
-    logAction('UPDATE', 'map', id, `Map renamed to "${name.trim()}"`, campaign_id);
-    res.json({ success: true });
+    // Get the map data before updating for the WebSocket emission
+    db.get('SELECT * FROM maps WHERE id = ? AND campaign_id = ?', [id, campaign_id], async (err, map) => {
+      if (err || !map) {
+        console.error('Error finding map:', err);
+        return res.status(500).json({ error: 'Failed to rename map' });
+      }
+
+      await db.run('UPDATE maps SET name = ? WHERE id = ? AND campaign_id = ?', [name.trim(), id, campaign_id]);
+      
+      const updatedMap = { ...map, name: name.trim() };
+      
+      // Emit real-time update for map rename
+      emitMapUpdate(campaign_id, 'map-updated', {
+        map: updatedMap
+      });
+      
+      // Log the action
+      logAction('UPDATE', 'map', id, `Map renamed to "${name.trim()}"`, campaign_id);
+      res.json({ success: true });
+    });
   } catch (error) {
     console.error('Error renaming map:', error);
     res.status(500).json({ error: 'Failed to rename map' });
@@ -459,6 +483,13 @@ app.delete('/api/maps/:id', (req, res) => {
             console.error('Error deleting from database:', deleteErr);
             return res.status(500).json({ error: 'Failed to delete map' });
           }
+          
+          // Emit real-time update for map deletion
+          emitMapUpdate(campaign_id, 'map-deleted', {
+            mapId: parseInt(id),
+            mapName: map.name
+          });
+          
           // Log the action
           logAction('DELETE', 'map', id, `Map "${map.name}" deleted`, campaign_id);
           res.json({ success: true });
@@ -563,6 +594,13 @@ app.post('/api/maps/:mapId/markers', (req, res) => {
         campaign_id
       );
 
+      // Emit real-time update for marker creation
+      emitMapUpdate(campaign_id, 'marker-created', {
+        marker: newMarker,
+        mapId: parseInt(mapId),
+        mapName: map.name
+      });
+
       res.json(newMarker);
     } catch (error) {
       console.error('Error creating marker:', error);
@@ -607,7 +645,16 @@ app.put('/api/maps/:mapId/markers/:id', (req, res) => {
           campaign_id
         );
 
-        res.json({ id: parseInt(id), map_id: mapId, lat, lng, label, description, color, shape, campaign_id });
+        const updatedMarker = { id: parseInt(id), map_id: parseInt(mapId), lat, lng, label, description, color, shape, campaign_id };
+        
+        // Emit real-time update for marker update
+        emitMapUpdate(campaign_id, 'marker-updated', {
+          marker: updatedMarker,
+          mapId: parseInt(mapId),
+          mapName: map.name
+        });
+
+        res.json(updatedMarker);
       }
     );
   });
@@ -654,6 +701,14 @@ app.delete('/api/maps/:mapId/markers/:id', (req, res) => {
             `Marker "${data?.label || 'Unnamed'}" deleted from map "${data?.map_name || 'Unknown'}"`, 
             campaign_id
           );
+
+          // Emit real-time update for marker deletion
+          emitMapUpdate(campaign_id, 'marker-deleted', {
+            markerId: parseInt(id),
+            mapId: parseInt(mapId),
+            mapName: data?.map_name || 'Unknown',
+            markerLabel: data?.label || 'Unnamed'
+          });
 
           res.json({ message: 'Marker deleted successfully' });
         }
@@ -1063,8 +1118,31 @@ server.listen(PORT, () => {
 
 // Socket.io connection
 io.on('connection', (socket) => {
-  console.log('New client connected');
-  socket.on('disconnect', () => {
-    console.log('Client disconnected');
+  console.log('New client connected:', socket.id);
+  
+  // Join campaign room for real-time updates
+  socket.on('join-campaign', (campaignId) => {
+    socket.join(`campaign-${campaignId}`);
+    console.log(`Socket ${socket.id} joined campaign-${campaignId}`);
   });
-}); 
+  
+  // Leave campaign room
+  socket.on('leave-campaign', (campaignId) => {
+    socket.leave(`campaign-${campaignId}`);
+    console.log(`Socket ${socket.id} left campaign-${campaignId}`);
+  });
+  
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
+// Helper function to emit map updates to campaign room
+function emitMapUpdate(campaignId, eventType, data) {
+  console.log(`Emitting ${eventType} to campaign-${campaignId}:`, data);
+  io.to(`campaign-${campaignId}`).emit('map-update', {
+    type: eventType,
+    data: data,
+    timestamp: Date.now()
+  });
+} 

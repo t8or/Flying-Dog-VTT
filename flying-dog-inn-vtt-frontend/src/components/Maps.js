@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './Maps.css';
 import { useCampaign } from '../contexts/CampaignContext';
+import { useSocket } from '../contexts/SocketContext';
 import IconButton from '@mui/material/IconButton';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -29,6 +30,7 @@ const Maps = ({ onMapChange }) => {
   const [imageDimensions, setImageDimensions] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { selectedCampaign } = useCampaign();
+  const { socket, isConnected } = useSocket();
   const mapContainerRef = React.useRef(null);
   const leafletMapRef = React.useRef(null);
 
@@ -717,6 +719,95 @@ const Maps = ({ onMapChange }) => {
       addMarkersToMap(markers, leafletMapRef.current);
     }
   }, [markers]);
+
+  // WebSocket event listener for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !selectedCampaign) return;
+
+    const handleMapUpdate = (update) => {
+      console.log('Received map update:', update);
+      
+      // Only process updates for the current map
+      if (update.data.mapId && parseInt(mapId) !== update.data.mapId) {
+        console.log('Update is for different map, ignoring');
+        return;
+      }
+
+      switch (update.type) {
+        case 'marker-created':
+          console.log('Adding new marker:', update.data.marker);
+          setMarkers(prev => {
+            // Check if marker already exists to prevent duplicates
+            const exists = prev.find(m => m.id === update.data.marker.id);
+            if (exists) return prev;
+            
+            const newMarker = {
+              ...update.data.marker,
+              lat: Number(update.data.marker.lat),
+              lng: Number(update.data.marker.lng),
+              campaign_id: selectedCampaign.id
+            };
+            return [...prev, newMarker];
+          });
+          break;
+
+        case 'marker-updated':
+          console.log('Updating marker:', update.data.marker);
+          setMarkers(prev => prev.map(m => 
+            m.id === update.data.marker.id 
+              ? {
+                  ...update.data.marker,
+                  lat: Number(update.data.marker.lat),
+                  lng: Number(update.data.marker.lng),
+                  campaign_id: selectedCampaign.id
+                }
+              : m
+          ));
+          break;
+
+        case 'marker-deleted':
+          console.log('Removing marker:', update.data.markerId);
+          setMarkers(prev => prev.filter(m => m.id !== update.data.markerId));
+          
+          // Also remove from leaflet map
+          if (leafletMapRef.current) {
+            leafletMapRef.current.eachLayer((layer) => {
+              if (layer instanceof L.Marker && layer.markerData && layer.markerData.id === update.data.markerId) {
+                leafletMapRef.current.removeLayer(layer);
+              }
+            });
+          }
+          break;
+
+        case 'map-updated':
+          // Handle map rename
+          if (update.data.map && update.data.map.id === parseInt(mapId)) {
+            console.log('Updating map data:', update.data.map);
+            setMapData(prev => ({ ...prev, ...update.data.map }));
+            if (onMapChange) onMapChange(update.data.map);
+          }
+          break;
+
+        case 'map-deleted':
+          // Handle map deletion - redirect if current map was deleted
+          if (update.data.mapId === parseInt(mapId)) {
+            console.log('Current map was deleted, redirecting...');
+            if (onMapChange) onMapChange({ type: 'delete', id: mapId });
+            navigate('/maps');
+          }
+          break;
+
+        default:
+          console.log('Unknown update type:', update.type);
+      }
+    };
+
+    socket.on('map-update', handleMapUpdate);
+
+    return () => {
+      socket.off('map-update', handleMapUpdate);
+    };
+  }, [socket, isConnected, selectedCampaign, mapId, navigate, onMapChange]);
 
   const handleMarkerCreate = () => {};
   const handleMarkerUpdate = () => {};

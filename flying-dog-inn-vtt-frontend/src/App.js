@@ -10,6 +10,7 @@ import CombatLoot from './components/CombatLoot';
 import Log from './components/Log';
 import Sidebar from './components/Sidebar';
 import { CampaignProvider } from './contexts/CampaignContext';
+import { SocketProvider } from './contexts/SocketContext';
 import './App.css';
 
 function App() {
@@ -24,7 +25,8 @@ function App() {
     <Router>
       <AuthProvider>
         <CampaignProvider>
-          <div className="app-container">
+          <SocketProvider>
+            <div className="app-container">
             <Sidebar onMapChange={handleMapChange} />
             <div className="main-content">
               <Routes>
@@ -62,7 +64,8 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
-          </div>
+            </div>
+          </SocketProvider>
         </CampaignProvider>
       </AuthProvider>
     </Router>

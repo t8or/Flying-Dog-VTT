@@ -71,39 +71,11 @@ body {
   flex: 1;
   padding: 0 16px 16px 0;
   overflow: hidden;
+  transition: all 0.3s ease-in-out;
+  min-width: 0; /* Allows flex item to shrink below content size */
 }
 
-/* Sidebar */
-.sidebar {
-  width: 280px;
-  height: 100vh;
-  background-color: white;
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  padding: 16px 0;
-  box-shadow: 8px 0 16px -6px rgba(16, 24, 40, 0.08), 
-              24px 0 56px -8px rgba(16, 24, 40, 0.05);
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  padding: 0 16px 16px;
-  gap: 12px;
-}
-
-.sidebar-header h1 {
-  font-size: 16px;
-  font-weight: 500;
-  margin: 0;
-  color: #333;
-}
-
-.sidebar-icon {
-  font-size: 20px;
-  opacity: 0.8;
-}
+/* Sidebar styles are now in Sidebar.css */
 
 /* Search */
 .search-container {
