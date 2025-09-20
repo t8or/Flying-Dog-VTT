@@ -52,6 +52,7 @@ Thumbs.db
 
 # Cloudflare tunnel credentials and config
 cloudflared/*.json
+cloudflared/
 cloudflared/config.yml
 
 # Temporary files and folders
