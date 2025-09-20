@@ -1,13 +1,4 @@
-# Environment variables
-.env
 
-# Cloudflare tunnel credentials (sensitive)
-cloudflared/*.json
-cloudflared/cert.pem
-
-# But keep the directory and example config
-!cloudflared/
-!cloudflared/.gitkeep
 
 # Node modules
 node_modules/
@@ -21,10 +12,6 @@ dist/
 *.log
 logs/
 
-# Database files (if you don't want to commit them)
-*.sqlite
-*.db
-
 # OS files
 .DS_Store
 Thumbs.db
@@ -35,5 +22,3 @@ Thumbs.db
 *.swp
 *.swo
 
-# Docker volumes data
-data/
