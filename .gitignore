@@ -1,19 +1,46 @@
 
-
-# Node modules
+# Dependencies
 node_modules/
 */node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Build outputs
 build/
 dist/
+*/build/
+*/dist/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database files (commented out to allow tracking)
+# *.sqlite
+# *.sqlite3
+# *.db
+# data/
+# */data/
+# database.sqlite
+# auth.sqlite
 
 # Logs
 *.log
 logs/
+*/logs/
+*-report.log
 
 # OS files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
 # IDE files
@@ -21,4 +48,76 @@ Thumbs.db
 .idea/
 *.swp
 *.swo
+*~
 
+# Cloudflare tunnel credentials and config
+cloudflared/*.json
+cloudflared/config.yml
+
+# Temporary files and folders
+tmp/
+temp/
+*.tmp
+*.temp
+
+# VTT specific files
+# Map uploads (if you want to exclude user-uploaded maps)
+# Uncomment the next line if maps should not be tracked
+# maps/
+# */maps/
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# Folders to be deleted
+to be deleted?/
