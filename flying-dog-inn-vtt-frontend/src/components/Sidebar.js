@@ -192,6 +192,23 @@ const CampaignSettings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { selectedCampaign, selectCampaign } = useCampaign();
 
+  // Handle ESC key to close dialog
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen]);
+
   const handleRenameCampaign = async () => {
     if (!selectedCampaign) return;
     

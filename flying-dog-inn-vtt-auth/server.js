@@ -161,7 +161,8 @@ app.post('/api/auth/login', loginLimiter, checkBlockedIP, async (req, res) => {
           res.cookie('auth_token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax', // Changed from 'strict' to 'lax' to allow cookies on navigation
+            path: '/', // Explicitly set path to root so cookie is sent with all requests
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10 // 10 years
           });
 

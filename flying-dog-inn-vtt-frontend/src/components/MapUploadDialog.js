@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCampaign } from '../contexts/CampaignContext';
 
 const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
@@ -7,6 +7,23 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const { selectedCampaign } = useCampaign();
+
+  // Handle ESC key to close dialog
+  useEffect(() => {
+    const handleEscKey = (event) => {
+      if (event.key === 'Escape' && isOpen && !isUploading) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscKey);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isOpen, isUploading, onClose]);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
