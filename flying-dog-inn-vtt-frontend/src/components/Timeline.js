@@ -104,6 +104,64 @@ const EventMenu = ({ event, onEdit, onDelete }) => {
   );
 };
 
+// Mini Loot Card component for horizontal swimlane display
+const MiniLootCard = ({ loot }) => {
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, #FFF9E6 0%, #F5E6D3 100%)',
+      border: '1px solid #D4AF37',
+      borderRadius: '6px',
+      padding: '12px',
+      minWidth: '200px',
+      maxWidth: '200px',
+      boxShadow: '0 2px 4px rgba(212, 175, 55, 0.2)',
+      transition: 'all 0.2s ease'
+    }}>
+      <h4 style={{ 
+        margin: '0 0 6px 0', 
+        fontSize: '13px', 
+        fontWeight: '600',
+        color: '#8B4513',
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
+      }}>
+        {loot.combat_name}
+      </h4>
+      {loot.loot_description && (
+        <p style={{ 
+          margin: '0 0 8px 0', 
+          fontSize: '11px',
+          color: '#6B5B4E',
+          display: '-webkit-box',
+          WebkitLineClamp: '2',
+          WebkitBoxOrient: 'vertical',
+          overflow: 'hidden',
+          lineHeight: '1.4'
+        }}>
+          {loot.loot_description}
+        </p>
+      )}
+      <div style={{ 
+        display: 'flex', 
+        gap: '8px',
+        fontSize: '11px',
+        fontWeight: '600'
+      }}>
+        {loot.gold_pieces > 0 && (
+          <span style={{ color: '#FFD700' }}>{loot.gold_pieces} GP</span>
+        )}
+        {loot.silver_pieces > 0 && (
+          <span style={{ color: '#C0C0C0' }}>{loot.silver_pieces} SP</span>
+        )}
+        {loot.copper_pieces > 0 && (
+          <span style={{ color: '#B87333' }}>{loot.copper_pieces} CP</span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const TimelineNavigation = ({ events, onTimelineClick }) => {
   const groupedEvents = Array.isArray(events) ? events.reduce((acc, event) => {
     const date = new Date(parseInt(event.timestamp));
@@ -197,14 +255,17 @@ const TimelineNavigation = ({ events, onTimelineClick }) => {
 
 const Timeline = () => {
   const [events, setEvents] = useState([]);
+  const [lootEntries, setLootEntries] = useState([]);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
   const { selectedCampaign } = useCampaign();
 
   useEffect(() => {
     setEvents([]); // Clear events when campaign changes
+    setLootEntries([]); // Clear loot entries when campaign changes
     if (selectedCampaign) {
       fetchEvents();
+      fetchLootEntries();
     }
   }, [selectedCampaign?.id]); // Add .id to ensure it updates when campaign changes
 
@@ -227,6 +288,29 @@ const Timeline = () => {
     } catch (error) {
       console.error('Error fetching events:', error);
       setEvents([]); // Ensure events is always an array
+    }
+  };
+
+  // Fetch loot entries for the campaign
+  const fetchLootEntries = async () => {
+    if (!selectedCampaign) return;
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot/${selectedCampaign.id}`);
+      if (!response.ok) throw new Error('Failed to fetch loot entries');
+      const data = await response.json();
+      
+      // Ensure data is an array
+      if (!Array.isArray(data)) {
+        console.error('Expected loot entries to be an array, got:', typeof data, data);
+        setLootEntries([]);
+        return;
+      }
+      
+      setLootEntries(data);
+    } catch (error) {
+      console.error('Error fetching loot entries:', error);
+      setLootEntries([]); // Ensure loot entries is always an array
     }
   };
 
@@ -433,6 +517,64 @@ const Timeline = () => {
     }
   };
 
+  // Merge timeline events and loot entries by date
+  // Creates blank timeline entries for dates that have loot but no timeline entry
+  const getMergedTimelineData = () => {
+    // Create a map of dates to timeline events
+    const timelineByDate = {};
+    events.forEach(event => {
+      const eventDate = new Date(parseInt(event.timestamp)).toISOString().split('T')[0];
+      if (!timelineByDate[eventDate]) {
+        timelineByDate[eventDate] = [];
+      }
+      timelineByDate[eventDate].push(event);
+    });
+
+    // Create a map of dates to loot entries
+    const lootByDate = {};
+    lootEntries.forEach(loot => {
+      if (!lootByDate[loot.date]) {
+        lootByDate[loot.date] = [];
+      }
+      lootByDate[loot.date].push(loot);
+    });
+
+    // Get all unique dates from both timeline and loot
+    const allDates = new Set([...Object.keys(timelineByDate), ...Object.keys(lootByDate)]);
+
+    // Create merged entries
+    const merged = {};
+    allDates.forEach(date => {
+      const timelineEvents = timelineByDate[date] || [];
+      const lootItems = lootByDate[date] || [];
+
+      // If there's loot but no timeline event, create a blank one
+      if (lootItems.length > 0 && timelineEvents.length === 0) {
+        const timestamp = new Date(date).getTime();
+        timelineEvents.push({
+          id: `blank-${date}`,
+          event: '',
+          details: '',
+          timestamp: timestamp,
+          isBlank: true
+        });
+      }
+
+      // Add to merged data
+      timelineEvents.forEach(event => {
+        if (!merged[date]) {
+          merged[date] = [];
+        }
+        merged[date].push({
+          ...event,
+          loot: lootItems
+        });
+      });
+    });
+
+    return merged;
+  };
+
   const handleExport = async () => {
     if (!selectedCampaign) {
       alert('Please select a campaign first');
@@ -530,6 +672,11 @@ const Timeline = () => {
           .timeline-event.editing .event-title {
             color: #4F46E5;
           }
+          .timeline-event.blank-timeline {
+            background: linear-gradient(135deg, #FFFBF5 0%, #FFF9E6 100%);
+            border: 1px dashed #D4AF37;
+            box-shadow: 0 1px 2px rgba(212, 175, 55, 0.1);
+          }
         `}
       </style>
       <div style={{ 
@@ -585,15 +732,25 @@ const Timeline = () => {
             }}>
               <div style={{ paddingTop: '8px', paddingBottom: '8px' }}>
                 {Object.entries(
-                  Array.isArray(events) ? events.reduce((acc, event) => {
-                    const date = new Date(parseInt(event.timestamp));
-                    const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-                    if (!acc[month]) {
-                      acc[month] = [];
-                    }
-                    acc[month].push(event);
-                    return acc;
-                  }, {}) : {}
+                  Array.isArray(events) || lootEntries.length > 0 ? (() => {
+                    // Get merged data (timeline + loot)
+                    const mergedData = getMergedTimelineData();
+                    
+                    // Group by month
+                    const byMonth = {};
+                    Object.entries(mergedData).forEach(([date, eventsList]) => {
+                      eventsList.forEach(event => {
+                        const eventDate = new Date(parseInt(event.timestamp));
+                        const month = eventDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+                        if (!byMonth[month]) {
+                          byMonth[month] = [];
+                        }
+                        byMonth[month].push(event);
+                      });
+                    });
+                    
+                    return byMonth;
+                  })() : {}
                 )
                 .sort(([monthA], [monthB]) => {
                   const dateA = new Date(monthA);
@@ -614,7 +771,8 @@ const Timeline = () => {
                     {monthEvents
                       .sort((a, b) => b.timestamp - a.timestamp)
                       .map(event => {
-                        if (editingEvent && editingEvent.id === event.id) {
+                        // Don't show editing form for blank timeline entries
+                        if (editingEvent && editingEvent.id === event.id && !event.isBlank) {
                           return <EventForm 
                             key={event.id} 
                             isEditing 
@@ -630,32 +788,82 @@ const Timeline = () => {
                           <div 
                             id={`event-${event.id}`}
                             key={event.id} 
-                            className={`timeline-event ${editingEvent?.id === event.id ? 'editing' : ''}`}
+                            className={`timeline-event ${editingEvent?.id === event.id ? 'editing' : ''} ${event.isBlank ? 'blank-timeline' : ''}`}
                           >
-                            <div style={{ 
-                              display: 'flex', 
-                              justifyContent: 'space-between', 
-                              alignItems: 'flex-start',
-                              marginBottom: '8px',
-                              position: 'sticky',
-                              top: 0,
-                              background: 'inherit',
-                              zIndex: 1,
-                              margin: '-16px -16px 8px -16px',
-                              padding: '16px',
-                              borderTopLeftRadius: '8px',
-                              borderTopRightRadius: '8px',
-                              borderBottom: '1px solid #E5E7EB'
-                            }}>
-                              <h3 className="event-title" style={{ margin: '0', color: '#111827', fontWeight: '500' }}>{event.event}</h3>
-                              <EventMenu event={event} onEdit={handleEdit} onDelete={handleDelete} />
-                            </div>
-                            <p style={{ 
-                              margin: '0 0 16px 0', 
-                              color: '#6B7280',
-                              whiteSpace: 'pre-wrap'
-                            }}>{event.details}</p>
-                            <small style={{ color: '#6B7280', display: 'block', margin: 0 }}>{formatDate(event.timestamp)}</small>
+                            {/* Only show header and content if not blank */}
+                            {!event.isBlank && (
+                              <>
+                                <div style={{ 
+                                  display: 'flex', 
+                                  justifyContent: 'space-between', 
+                                  alignItems: 'flex-start',
+                                  marginBottom: '8px',
+                                  position: 'sticky',
+                                  top: 0,
+                                  background: 'inherit',
+                                  zIndex: 1,
+                                  margin: '-16px -16px 8px -16px',
+                                  padding: '16px',
+                                  borderTopLeftRadius: '8px',
+                                  borderTopRightRadius: '8px',
+                                  borderBottom: '1px solid #E5E7EB'
+                                }}>
+                                  <h3 className="event-title" style={{ margin: '0', color: '#111827', fontWeight: '500' }}>{event.event}</h3>
+                                  <EventMenu event={event} onEdit={handleEdit} onDelete={handleDelete} />
+                                </div>
+                                <p style={{ 
+                                  margin: '0 0 16px 0', 
+                                  color: '#6B7280',
+                                  whiteSpace: 'pre-wrap'
+                                }}>{event.details}</p>
+                                <small style={{ color: '#6B7280', display: 'block', margin: '0 0 12px 0' }}>{formatDate(event.timestamp)}</small>
+                              </>
+                            )}
+                            
+                            {/* Show loot swimlane if there are loot items */}
+                            {event.loot && event.loot.length > 0 && (
+                              <div style={{
+                                marginTop: event.isBlank ? '0' : '12px',
+                                paddingTop: event.isBlank ? '0' : '12px',
+                                borderTop: event.isBlank ? 'none' : '1px solid #E5E7EB'
+                              }}>
+                                <div style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  marginBottom: '8px'
+                                }}>
+                                  <span style={{
+                                    fontSize: '12px',
+                                    color: '#8B4513',
+                                    fontWeight: '600',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.05em'
+                                  }}>
+                                    Loot History
+                                  </span>
+                                  {event.isBlank && (
+                                    <span style={{
+                                      fontSize: '11px',
+                                      color: '#6B7280',
+                                      marginLeft: '8px',
+                                      fontStyle: 'italic'
+                                    }}>
+                                      ({formatDate(event.timestamp)})
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{
+                                  display: 'flex',
+                                  gap: '12px',
+                                  overflowX: 'auto',
+                                  paddingBottom: '4px'
+                                }}>
+                                  {event.loot.map(loot => (
+                                    <MiniLootCard key={loot.id} loot={loot} />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

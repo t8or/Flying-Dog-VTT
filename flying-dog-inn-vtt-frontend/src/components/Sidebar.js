@@ -763,7 +763,7 @@ const Sidebar = ({ onMapChange }) => {
 
           {combatExpanded && (
             <Link to="/combat/loot" className={`nav-item ${location.pathname === '/combat/loot' ? 'active' : ''}`}>
-              Here be loot
+              Loot
             </Link>
           )}
 

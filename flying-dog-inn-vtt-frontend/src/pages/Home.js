@@ -10,11 +10,13 @@ const Home = () => {
     timelineEventCount: 0,
     lastActive: null
   });
+  const [lootForLastEvent, setLootForLastEvent] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { selectedCampaign } = useCampaign();
 
   useEffect(() => {
     setIsLoading(true);
+    setLootForLastEvent([]);
     if (selectedCampaign) {
       console.log('Fetching stats for campaign:', selectedCampaign.id);
       fetchStats();
@@ -69,6 +71,11 @@ const Home = () => {
         timelineEventCount: timelineEvents.length,
         lastActive: lastEvent ? new Date(parseInt(lastEvent.timestamp)) : null
       });
+
+      // Fetch loot for the last event if it exists
+      if (lastEvent) {
+        fetchLootForEvent(lastEvent);
+      }
     } catch (error) {
       console.error('Error fetching stats:', error);
       setStats({
@@ -79,6 +86,25 @@ const Home = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchLootForEvent = async (event) => {
+    if (!selectedCampaign || !event) return;
+    
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3334/api'}/combat/loot/${selectedCampaign.id}`);
+      if (!response.ok) throw new Error('Failed to fetch loot entries');
+      const allLoot = await response.json();
+      
+      // Filter loot that matches the event's date
+      const eventDate = new Date(parseInt(event.timestamp)).toISOString().split('T')[0];
+      const matchingLoot = allLoot.filter(loot => loot.date === eventDate);
+      
+      setLootForLastEvent(matchingLoot);
+    } catch (error) {
+      console.error('Error fetching loot for event:', error);
+      setLootForLastEvent([]);
     }
   };
 
@@ -112,6 +138,64 @@ const Home = () => {
     if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
     if (days < 365) return `${Math.floor(days / 30)} months ago`;
     return `${Math.floor(days / 365)} years ago`;
+  };
+
+  // Mini Loot Card component for horizontal swimlane display
+  const MiniLootCard = ({ loot }) => {
+    return (
+      <div style={{
+        background: 'linear-gradient(135deg, #FFF9E6 0%, #F5E6D3 100%)',
+        border: '1px solid #D4AF37',
+        borderRadius: '6px',
+        padding: '12px',
+        minWidth: '200px',
+        maxWidth: '200px',
+        boxShadow: '0 2px 4px rgba(212, 175, 55, 0.2)',
+        transition: 'all 0.2s ease'
+      }}>
+        <h4 style={{ 
+          margin: '0 0 6px 0', 
+          fontSize: '13px', 
+          fontWeight: '600',
+          color: '#8B4513',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}>
+          {loot.combat_name}
+        </h4>
+        {loot.loot_description && (
+          <p style={{ 
+            margin: '0 0 8px 0', 
+            fontSize: '11px',
+            color: '#6B5B4E',
+            display: '-webkit-box',
+            WebkitLineClamp: '2',
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            lineHeight: '1.4'
+          }}>
+            {loot.loot_description}
+          </p>
+        )}
+        <div style={{ 
+          display: 'flex', 
+          gap: '8px',
+          fontSize: '11px',
+          fontWeight: '600'
+        }}>
+          {loot.gold_pieces > 0 && (
+            <span style={{ color: '#FFD700' }}>{loot.gold_pieces} GP</span>
+          )}
+          {loot.silver_pieces > 0 && (
+            <span style={{ color: '#C0C0C0' }}>{loot.silver_pieces} SP</span>
+          )}
+          {loot.copper_pieces > 0 && (
+            <span style={{ color: '#B87333' }}>{loot.copper_pieces} CP</span>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const StatCard = ({ icon: Icon, title, value, date }) => (
@@ -179,6 +263,41 @@ const Home = () => {
                   <small className="event-date">
                     {new Date(parseInt(stats.lastTimelineEvent.timestamp)).toLocaleDateString()}
                   </small>
+                  
+                  {/* Show loot swimlane if there are loot items */}
+                  {lootForLastEvent && lootForLastEvent.length > 0 && (
+                    <div style={{
+                      marginTop: '16px',
+                      paddingTop: '16px',
+                      borderTop: '1px solid #E5E7EB'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginBottom: '8px'
+                      }}>
+                        <span style={{
+                          fontSize: '12px',
+                          color: '#8B4513',
+                          fontWeight: '600',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Loot
+                        </span>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        overflowX: 'auto',
+                        paddingBottom: '4px'
+                      }}>
+                        {lootForLastEvent.map(loot => (
+                          <MiniLootCard key={loot.id} loot={loot} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

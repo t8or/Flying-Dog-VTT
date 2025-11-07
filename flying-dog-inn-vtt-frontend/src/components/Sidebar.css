@@ -119,14 +119,14 @@
   position: relative;
   margin-bottom: 8px;
   width: 100%;
-  padding: 0 16px;
+  padding: 0;
   box-sizing: border-box;
   flex-shrink: 0; /* Prevent search from shrinking */
 }
 
 .search-icon {
   position: absolute;
-  left: 24px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #6B7280;
@@ -156,9 +156,9 @@
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 0 16px;
-  box-sizing: border-box;
+  padding: 0;
   padding-bottom: 16px; /* Add space at bottom for better scrolling */
+  box-sizing: border-box;
 }
 
 .nav-header {
@@ -273,12 +273,12 @@
 }
 
 .sidebar-footer .nav-header {
-  margin: 0 16px;
-  width: calc(100% - 32px);
+  margin: 0;
+  width: 100%;
 }
 
 .campaign-info {
-  width: calc(100% - 32px);
+  width: 100%;
   padding: 8px 8px 8px 16px;
   border: 1px solid #F3F4F6;
   border-radius: 8px;
@@ -287,7 +287,7 @@
   align-items: center;
   background: white;
   box-sizing: border-box;
-  margin: 0 16px;
+  margin: 0;
 }
 
 .campaign-name {
@@ -337,8 +337,8 @@
 .campaign-dropdown {
   position: absolute;
   bottom: 100%;
-  left: 16px;
-  right: 16px;
+  left: 0;
+  right: 0;
   background: white;
   border: 1px solid #E5E7EB;
   border-radius: 8px;
