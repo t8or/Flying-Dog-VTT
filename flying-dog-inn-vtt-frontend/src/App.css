@@ -218,41 +218,15 @@ body {
   margin-top: 4px;
 }
 
-/* Dialog */
-.dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10000; /* High z-index to ensure dialogs appear above all content including maps */
-}
+/* Dialog overlay is defined in Sidebar.css — do not redefine here */
 
+/* MapUploadDialog-specific dialog sizing */
 .dialog {
-  background: #f0f0f0;
+  background: white;
   border-radius: 8px;
   min-width: 300px;
-  max-width: 400px;
-  width: fit-content;
-}
-
-.dialog-header {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.dialog-header h2 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: normal;
-  color: #333;
+  max-width: 480px;
+  width: 100%;
 }
 
 .close-button {
@@ -263,11 +237,6 @@ body {
   cursor: pointer;
   padding: 0;
   line-height: 1;
-}
-
-.dialog-content {
-  padding: 16px;
-  width: 350px;
 }
 
 .form-group {

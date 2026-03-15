@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -289,9 +290,9 @@ const CampaignSettings = () => {
 
   return (
     <>
-      <div 
-        className="nav-header" 
-        onClick={() => setIsOpen(true)}
+      <div
+        className="nav-header"
+        onClick={() => { if (selectedCampaign) setIsOpen(true); }}
       >
         <div className="nav-header-content">
           <Gear size={16} weight="regular" className="nav-header-icon" />
@@ -299,14 +300,14 @@ const CampaignSettings = () => {
         </div>
       </div>
 
-      {isOpen && selectedCampaign && (
+      {isOpen && selectedCampaign && createPortal(
         <div className="dialog-overlay" onClick={() => setIsOpen(false)}>
           <div className="dialog" onClick={e => e.stopPropagation()}>
             <div className="dialog-header">
               <h2>Campaign Settings</h2>
               <button className="dialog-close" onClick={() => setIsOpen(false)}>×</button>
             </div>
-            
+
             <div className="dialog-content">
               <div className="dialog-section">
                 <h3>Campaign Name</h3>
@@ -327,7 +328,8 @@ const CampaignSettings = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
