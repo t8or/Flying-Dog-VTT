@@ -1110,6 +1110,158 @@ app.get('/api/campaign/export/:campaign_id', async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────────────
+// Combat Tracker Endpoints
+// ──────────────────────────────────────────────
+
+function emitCombatUpdate(campaignId, type, data) {
+  io.to(`campaign-${campaignId}`).emit('combat-update', { type, data, timestamp: Date.now() });
+}
+
+// Create a new combat session
+app.post('/api/combat/session', (req, res) => {
+  const { campaign_id, name } = req.body;
+  if (!campaign_id) return res.status(400).json({ error: 'campaign_id is required' });
+  const now = Math.floor(Date.now() / 1000);
+  db.run(
+    'INSERT INTO combat_sessions (campaign_id, name, created_at, updated_at) VALUES (?, ?, ?, ?)',
+    [campaign_id, name || 'Combat', now, now],
+    function (err) {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to create session' }); }
+      const sessionId = this.lastID;
+      db.get('SELECT * FROM combat_sessions WHERE id = ?', [sessionId], (err2, row) => {
+        if (err2) return res.status(500).json({ error: 'Failed to fetch session' });
+        emitCombatUpdate(campaign_id, 'session-created', row);
+        res.status(201).json(row);
+      });
+    }
+  );
+});
+
+// Get active session for a campaign
+app.get('/api/combat/session/:campaignId', (req, res) => {
+  db.get(
+    'SELECT * FROM combat_sessions WHERE campaign_id = ? AND is_active = 1 ORDER BY created_at DESC LIMIT 1',
+    [req.params.campaignId],
+    (err, row) => {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to fetch session' }); }
+      res.json(row || null);
+    }
+  );
+});
+
+// Update a session (round, active_combatant_index, name)
+app.put('/api/combat/session/:id', (req, res) => {
+  const { round, active_combatant_index, name, is_active } = req.body;
+  const now = Math.floor(Date.now() / 1000);
+  db.run(
+    `UPDATE combat_sessions SET
+      round = COALESCE(?, round),
+      active_combatant_index = COALESCE(?, active_combatant_index),
+      name = COALESCE(?, name),
+      is_active = COALESCE(?, is_active),
+      updated_at = ?
+    WHERE id = ?`,
+    [round, active_combatant_index, name, is_active, now, req.params.id],
+    function (err) {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to update session' }); }
+      db.get('SELECT * FROM combat_sessions WHERE id = ?', [req.params.id], (err2, row) => {
+        if (err2 || !row) return res.status(404).json({ error: 'Session not found' });
+        emitCombatUpdate(row.campaign_id, 'session-updated', row);
+        res.json(row);
+      });
+    }
+  );
+});
+
+// End / delete a session
+app.delete('/api/combat/session/:id', (req, res) => {
+  db.get('SELECT * FROM combat_sessions WHERE id = ?', [req.params.id], (err, row) => {
+    if (err || !row) return res.status(404).json({ error: 'Session not found' });
+    db.run('DELETE FROM combat_sessions WHERE id = ?', [req.params.id], function (err2) {
+      if (err2) { console.error(err2); return res.status(500).json({ error: 'Failed to delete session' }); }
+      emitCombatUpdate(row.campaign_id, 'session-deleted', { id: req.params.id });
+      res.json({ success: true });
+    });
+  });
+});
+
+// Add a combatant to a session
+app.post('/api/combat/combatants', (req, res) => {
+  const { session_id, campaign_id, name, type, initiative, hp_current, hp_max, ac, conditions, notes } = req.body;
+  if (!session_id || !campaign_id || !name) return res.status(400).json({ error: 'session_id, campaign_id, and name are required' });
+  const now = Math.floor(Date.now() / 1000);
+  const condStr = Array.isArray(conditions) ? JSON.stringify(conditions) : (conditions || '[]');
+  db.run(
+    `INSERT INTO combat_combatants (session_id, campaign_id, name, type, initiative, hp_current, hp_max, ac, conditions, notes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [session_id, campaign_id, name, type || 'monster', initiative || 0, hp_current || hp_max || 0, hp_max || 0, ac || 10, condStr, notes || '', now, now],
+    function (err) {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to add combatant' }); }
+      db.get('SELECT * FROM combat_combatants WHERE id = ?', [this.lastID], (err2, row) => {
+        if (err2) return res.status(500).json({ error: 'Failed to fetch combatant' });
+        emitCombatUpdate(campaign_id, 'combatant-added', row);
+        res.status(201).json(row);
+      });
+    }
+  );
+});
+
+// Get all combatants for a session
+app.get('/api/combat/combatants/:sessionId', (req, res) => {
+  db.all(
+    'SELECT * FROM combat_combatants WHERE session_id = ? ORDER BY initiative DESC, id ASC',
+    [req.params.sessionId],
+    (err, rows) => {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to fetch combatants' }); }
+      res.json(rows);
+    }
+  );
+});
+
+// Update a combatant
+app.put('/api/combat/combatants/:id', (req, res) => {
+  const { name, initiative, hp_current, hp_max, ac, conditions, notes, type } = req.body;
+  const now = Math.floor(Date.now() / 1000);
+  const condStr = conditions !== undefined
+    ? (Array.isArray(conditions) ? JSON.stringify(conditions) : conditions)
+    : undefined;
+  db.run(
+    `UPDATE combat_combatants SET
+      name = COALESCE(?, name),
+      type = COALESCE(?, type),
+      initiative = COALESCE(?, initiative),
+      hp_current = COALESCE(?, hp_current),
+      hp_max = COALESCE(?, hp_max),
+      ac = COALESCE(?, ac),
+      conditions = COALESCE(?, conditions),
+      notes = COALESCE(?, notes),
+      updated_at = ?
+    WHERE id = ?`,
+    [name, type, initiative, hp_current, hp_max, ac, condStr, notes, now, req.params.id],
+    function (err) {
+      if (err) { console.error(err); return res.status(500).json({ error: 'Failed to update combatant' }); }
+      db.get('SELECT * FROM combat_combatants WHERE id = ?', [req.params.id], (err2, row) => {
+        if (err2 || !row) return res.status(404).json({ error: 'Combatant not found' });
+        emitCombatUpdate(row.campaign_id, 'combatant-updated', row);
+        res.json(row);
+      });
+    }
+  );
+});
+
+// Remove a combatant
+app.delete('/api/combat/combatants/:id', (req, res) => {
+  db.get('SELECT * FROM combat_combatants WHERE id = ?', [req.params.id], (err, row) => {
+    if (err || !row) return res.status(404).json({ error: 'Combatant not found' });
+    db.run('DELETE FROM combat_combatants WHERE id = ?', [req.params.id], function (err2) {
+      if (err2) { console.error(err2); return res.status(500).json({ error: 'Failed to remove combatant' }); }
+      emitCombatUpdate(row.campaign_id, 'combatant-removed', { id: req.params.id, session_id: row.session_id });
+      res.json({ success: true });
+    });
+  });
+});
+
 // Start the server
 const PORT = process.env.PORT || 3334;
 server.listen(PORT, () => {
