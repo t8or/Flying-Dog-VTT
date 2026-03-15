@@ -84,11 +84,11 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="dialog-overlay" onClick={onClose}>
+    <div className="dialog-overlay" onClick={isUploading ? undefined : onClose}>
       <div className="dialog" onClick={e => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>Add New Map to {selectedCampaign?.name || 'Campaign'}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="dialog-close" onClick={isUploading ? undefined : onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="dialog-content">

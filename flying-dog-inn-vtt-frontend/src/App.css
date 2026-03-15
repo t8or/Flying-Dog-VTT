@@ -218,26 +218,7 @@ body {
   margin-top: 4px;
 }
 
-/* Dialog overlay is defined in Sidebar.css — do not redefine here */
-
-/* MapUploadDialog-specific dialog sizing */
-.dialog {
-  background: white;
-  border-radius: 8px;
-  min-width: 300px;
-  max-width: 480px;
-  width: 100%;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 20px;
-  color: #666;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
+/* Dialog overlay, .dialog, and .dialog-close are defined in Sidebar.css — do not redefine here */
 
 .form-group {
   margin-bottom: 16px;
