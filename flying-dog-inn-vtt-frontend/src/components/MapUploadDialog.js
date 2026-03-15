@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useCampaign } from '../contexts/CampaignContext';
 
 const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
@@ -7,6 +8,15 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
   const [error, setError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const { selectedCampaign } = useCampaign();
+
+  // Reset form state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setMapName('');
+      setSelectedFile(null);
+      setError('');
+    }
+  }, [isOpen]);
 
   // Handle ESC key to close dialog
   useEffect(() => {
@@ -73,12 +83,12 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
 
   if (!isOpen) return null;
 
-  return (
-    <div className="dialog-overlay">
-      <div className="dialog">
+  return createPortal(
+    <div className="dialog-overlay" onClick={isUploading ? undefined : onClose}>
+      <div className="dialog" onClick={e => e.stopPropagation()}>
         <div className="dialog-header">
           <h2>Add New Map to {selectedCampaign?.name || 'Campaign'}</h2>
-          <button className="close-button" onClick={onClose}>×</button>
+          <button className="dialog-close" onClick={isUploading ? undefined : onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit}>
           <div className="dialog-content">
@@ -130,7 +140,8 @@ const MapUploadDialog = ({ isOpen, onClose, onUpload }) => {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
