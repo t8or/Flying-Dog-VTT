@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Maps from './components/Maps';
 import Timeline from './components/Timeline';
 import CombatLoot from './components/CombatLoot';
+import CombatTracker from './components/CombatTracker';
 import Log from './components/Log';
 import Sidebar from './components/Sidebar';
 import { CampaignProvider } from './contexts/CampaignContext';
@@ -49,6 +50,11 @@ function App() {
                 <Route path="/timeline" element={
                   <ProtectedRoute>
                     <Timeline />
+                  </ProtectedRoute>
+                } />
+                <Route path="/combat/tracker" element={
+                  <ProtectedRoute>
+                    <CombatTracker />
                   </ProtectedRoute>
                 } />
                 <Route path="/combat/loot" element={

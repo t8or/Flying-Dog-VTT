@@ -764,6 +764,11 @@ const Sidebar = ({ onMapChange }) => {
           </div>
 
           {combatExpanded && (
+            <Link to="/combat/tracker" className={`nav-item ${location.pathname === '/combat/tracker' ? 'active' : ''}`}>
+              Tracker
+            </Link>
+          )}
+          {combatExpanded && (
             <Link to="/combat/loot" className={`nav-item ${location.pathname === '/combat/loot' ? 'active' : ''}`}>
               Loot
             </Link>
